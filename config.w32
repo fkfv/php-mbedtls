@@ -1,10 +1,10 @@
 ARG_WITH('mbedtls', 'mbedtls support', 'no');
 
 if (PHP_MBEDTLS != 'no') {
-  if (CHECK_LIB('mbedTLS.lib;', 'mbedtls', PHP_MBEDTLS) && CHECK_HEADER_ADD_INCLUDE('mbedtls/version.h', 'CFLAGS_MBEDTLS')) {
+  if (CHECK_LIB('mbedtls.lib', 'mbedtls') && CHECK_HEADER_ADD_INCLUDE('mbedtls/version.h', 'CFLAGS_MBEDTLS')) {
     AC_DEFINE('HAVE_MBEDTLS', 1, 'mbedtls support enabled');
 
-    EXTENSION('mbedtls', 'mbedtls.c', null, '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
+    EXTENSION('mbedtls', 'mbedtls.c cipher.c', null, '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
   } else {
     WARNING('mbedtls not enabled; libraries not found');
   }

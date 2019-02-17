@@ -34,4 +34,21 @@ extern zend_module_entry mbedtls_module_entry;
 ZEND_TSRMLS_CACHE_EXTERN()
 #endif
 
+/* exported functions */
+
+// aes.c
+#define MBEDTLS_AES_HEX 0x01
+#define MBEDTLS_AES_RAW 0x02
+
+#define MBEDTLS_AES_CBC 0x01
+#define MBEDTLS_AES_ECB 0x02
+#define MBEDTLS_AES_OFB 0x03
+#define MBEDTLS_AES_CTR 0x04
+
+#define MBEDTLS_ZERO_PADDING 0x01
+#define MBEDTLS_RAW_DATA     0x02
+
+PHP_FUNCTION(mbedtls_encrypt);
+PHP_FUNCTION(mbedtls_decrypt);
+
 #endif	/* PHP_MBEDTLS_H */
