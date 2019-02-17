@@ -36,15 +36,7 @@ ZEND_TSRMLS_CACHE_EXTERN()
 
 /* exported functions */
 
-// aes.c
-#define MBEDTLS_AES_HEX 0x01
-#define MBEDTLS_AES_RAW 0x02
-
-#define MBEDTLS_AES_CBC 0x01
-#define MBEDTLS_AES_ECB 0x02
-#define MBEDTLS_AES_OFB 0x03
-#define MBEDTLS_AES_CTR 0x04
-
+// cipher.c
 #define MBEDTLS_ZERO_PADDING 0x01
 #define MBEDTLS_RAW_DATA     0x02
 
