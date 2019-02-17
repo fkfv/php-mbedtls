@@ -18,6 +18,12 @@ configure --enable-mbedtls
 make # nmake on windows
 ```
 
+OpenSSL Compatiblity
+====================
+
+This extension attempts to be compatible with the OpenSSL for PHP extension in
+both output and API.
+
 License & Contributing
 ======================
 
