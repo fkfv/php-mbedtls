@@ -255,3 +255,21 @@ PHP_FUNCTION(mbedtls_decrypt)
 
   RETVAL_STR(return_val.s);
 }
+
+PHP_FUNCTION(mbedtls_ciphers)
+{
+  const int *cipher_list;
+  const mbedtls_cipher_info_t *cipher_info;
+
+  array_init(return_value);
+
+  cipher_list = mbedtls_cipher_list();
+
+  while (*cipher_list)
+  {
+    cipher_info = mbedtls_cipher_info_from_type(*cipher_list);
+    add_next_index_string(return_value, cipher_info->name);
+
+    cipher_list++;
+  }
+}

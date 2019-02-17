@@ -30,6 +30,7 @@
 #include "ext/standard/info.h"
 #include "php_mbedtls.h"
 
+// cipher.c
 ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_encrypt, 0, 0, 3)
   ZEND_ARG_INFO(0, data)
   ZEND_ARG_INFO(0, method)
@@ -51,9 +52,12 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_decrypt, 0, 0, 3)
   ZEND_ARG_INFO(0, aad)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_ciphers, 0, 0, 0)
+ZEND_END_ARG_INFO();
+
 PHP_MINIT_FUNCTION(mbedtls)
 {
-  // cipher
+  // cipher.c
   REGISTER_LONG_CONSTANT("MBEDTLS_ZERO_PADDING", MBEDTLS_ZERO_PADDING, CONST_CS | CONST_PERSISTENT);
   REGISTER_LONG_CONSTANT("MBEDTLS_RAW_DATA",     MBEDTLS_RAW_DATA    , CONST_CS | CONST_PERSISTENT);
 
@@ -68,8 +72,10 @@ PHP_MINFO_FUNCTION(mbedtls)
 }
 
 static const zend_function_entry mbedtls_functions[] = {
+  // ciphers.c
   PHP_FE(mbedtls_encrypt, arginfo_mbedtls_encrypt)
   PHP_FE(mbedtls_decrypt, arginfo_mbedtls_decrypt)
+  PHP_FE(mbedtls_ciphers, arginfo_mbedtls_ciphers)
   PHP_FE_END
 };
 

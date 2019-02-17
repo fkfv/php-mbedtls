@@ -42,5 +42,6 @@ ZEND_TSRMLS_CACHE_EXTERN()
 
 PHP_FUNCTION(mbedtls_encrypt);
 PHP_FUNCTION(mbedtls_decrypt);
+PHP_FUNCTION(mbedtls_ciphers);
 
 #endif	/* PHP_MBEDTLS_H */
