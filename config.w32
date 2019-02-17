@@ -1,0 +1,7 @@
+ARG_ENABLE('mbedtls', 'mbedtls support', 'no');
+
+if (PHP_MBEDTLS != 'no') {
+	AC_DEFINE('HAVE_MBEDTLS', 1, 'mbedtls support enabled');
+
+	EXTENSION('mbedtls', 'mbedtls.c', null, '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
+}
