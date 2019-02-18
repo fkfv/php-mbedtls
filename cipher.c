@@ -59,16 +59,11 @@ PHP_FUNCTION(mbedtls_encrypt)
   const mbedtls_cipher_info_t *cipher_info;
   smart_str return_val = {0};
 
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sss|lszsl", &data,
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sss|lsz/sl", &data,
     &data_len, &method, &method_len, &key, &key_len, &options, &iv, &iv_len,
     &ztag, &aad, &aad_len, &tag_length) == FAILURE)
   {
     return;
-  }
-
-  if (ztag != NULL)
-  {
-    convert_to_null(ztag);
   }
 
   mbedtls_cipher_init(&ctx);
@@ -129,7 +124,8 @@ PHP_FUNCTION(mbedtls_encrypt)
   if (ztag != NULL)
   {
     mbedtls_cipher_write_tag(&ctx, tag, tag_length);
-    ZVAL_STR(ztag, zend_string_init(tag, tag_length, 0));
+    zval_ptr_dtor(ztag);
+    ZVAL_STRINGL(ztag, tag, tag_length);
   }
 
   mbedtls_cipher_free(&ctx);
