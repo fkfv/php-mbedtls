@@ -411,7 +411,7 @@ PHP_FUNCTION(mbedtls_pkey_get_details)
   {
     ctx_rsa = mbedtls_pk_rsa(*ctx_key);
 
-    mbedtls_rsa_export(ctx_rsa, &N, &P, &Q, &D, &E);
+    mbedtls_rsa_export(ctx_rsa, &N, NULL, NULL, NULL, &E);
     mbedtls_rsa_export_crt(ctx_rsa, &DP, &DQ, &QP);
 
     php_mbedtls_add_key_detail(&info, "n", &N);
@@ -419,6 +419,9 @@ PHP_FUNCTION(mbedtls_pkey_get_details)
 
     if (mbedtls_rsa_check_privkey(ctx_rsa) == 0)
     {
+      mbedtls_rsa_export(ctx_rsa, NULL, &P, &Q, &D, NULL);
+      mbedtls_rsa_export_crt(ctx_rsa, &DP, &DQ, &QP);
+
       php_mbedtls_add_key_detail(&info, "p", &P);
       php_mbedtls_add_key_detail(&info, "q", &Q);
       php_mbedtls_add_key_detail(&info, "d", &D);
