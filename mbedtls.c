@@ -30,6 +30,8 @@
 #include "ext/standard/info.h"
 #include "php_mbedtls.h"
 
+#include <mbedtls/pk.h>
+
 // cipher.c
 ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_encrypt, 0, 0, 3)
   ZEND_ARG_INFO(0, data)
@@ -55,11 +57,50 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_ciphers, 0, 0, 0)
 ZEND_END_ARG_INFO();
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_pkey_new, 0, 0, 0)
+  ZEND_ARG_INFO(0, configargs)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_pkey_free, 0, 0, 1)
+  ZEND_ARG_INFO(0, pkey)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_pkey_export, 0, 0, 2)
+  ZEND_ARG_INFO(0, pkey)
+  ZEND_ARG_INFO(1, out)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_pkey_export_to_file, 0, 0, 2)
+  ZEND_ARG_INFO(0, pkey)
+  ZEND_ARG_INFO(0, file)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_pkey_get_detials, 0, 0, 1)
+  ZEND_ARG_INFO(0, pkey)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_pkey_get_public, 0, 0, 1)
+  ZEND_ARG_INFO(0, key)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_pkey_get_private, 0, 0, 1)
+  ZEND_ARG_INFO(0, key)
+  ZEND_ARG_INFO(0, password)
+ZEND_END_ARG_INFO()
+
+int le_pkey = 0;
+
 PHP_MINIT_FUNCTION(mbedtls)
 {
   // cipher.c
   REGISTER_LONG_CONSTANT("MBEDTLS_ZERO_PADDING", MBEDTLS_ZERO_PADDING, CONST_CS | CONST_PERSISTENT);
-  REGISTER_LONG_CONSTANT("MBEDTLS_RAW_DATA",     MBEDTLS_RAW_DATA    , CONST_CS | CONST_PERSISTENT);
+  REGISTER_LONG_CONSTANT("MBEDTLS_RAW_DATA"    , MBEDTLS_RAW_DATA    , CONST_CS | CONST_PERSISTENT);
+
+  // pkey.c
+  REGISTER_LONG_CONSTANT("MBEDTLS_KEYTYPE_RSA", MBEDTLS_PK_RSA  , CONST_CS | CONST_PERSISTENT);
+  REGISTER_LONG_CONSTANT("MBEDTLS_KEYTYPE_EC" , MBEDTLS_PK_ECKEY, CONST_CS | CONST_PERSISTENT);
+
+  le_pkey = zend_register_list_destructors_ex(php_mbedtls_pkey_free, NULL, MBEDTLS_PKEY_RESOURCE, module_number);
 
   return SUCCESS;
 }
@@ -72,10 +113,19 @@ PHP_MINFO_FUNCTION(mbedtls)
 }
 
 static const zend_function_entry mbedtls_functions[] = {
-  // ciphers.c
+  // cipher.c
   PHP_FE(mbedtls_encrypt, arginfo_mbedtls_encrypt)
   PHP_FE(mbedtls_decrypt, arginfo_mbedtls_decrypt)
   PHP_FE(mbedtls_ciphers, arginfo_mbedtls_ciphers)
+
+  // pkey.c
+  PHP_FE(mbedtls_pkey_new           , arginfo_mbedtls_pkey_new)
+  PHP_FE(mbedtls_pkey_free          , arginfo_mbedtls_pkey_free)
+  PHP_FE(mbedtls_pkey_export        , arginfo_mbedtls_pkey_export)
+  PHP_FE(mbedtls_pkey_export_to_file, arginfo_mbedtls_pkey_export_to_file)
+  PHP_FE(mbedtls_pkey_get_details   , arginfo_mbedtls_pkey_get_detials)
+  PHP_FE(mbedtls_pkey_get_public    , arginfo_mbedtls_pkey_get_public)
+  PHP_FE(mbedtls_pkey_get_private   , arginfo_mbedtls_pkey_get_private)
   PHP_FE_END
 };
 

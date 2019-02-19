@@ -44,4 +44,21 @@ PHP_FUNCTION(mbedtls_encrypt);
 PHP_FUNCTION(mbedtls_decrypt);
 PHP_FUNCTION(mbedtls_ciphers);
 
+// pkey.c
+#define MBEDTLS_KEYTYPE_RSA 0x01
+#define MBEDTLS_KEYTYPE_EC  0x02
+
+#define MBEDTLS_PKEY_RESOURCE "mbedtls pk context"
+
+extern int le_pkey;
+void php_mbedtls_pkey_free(zend_resource *);
+
+PHP_FUNCTION(mbedtls_pkey_new);
+PHP_FUNCTION(mbedtls_pkey_free);
+PHP_FUNCTION(mbedtls_pkey_export);
+PHP_FUNCTION(mbedtls_pkey_export_to_file);
+PHP_FUNCTION(mbedtls_pkey_get_details);
+PHP_FUNCTION(mbedtls_pkey_get_public);
+PHP_FUNCTION(mbedtls_pkey_get_private);
+
 #endif	/* PHP_MBEDTLS_H */
