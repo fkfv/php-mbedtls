@@ -36,6 +36,7 @@
 #include <mbedtls/ecdsa.h>
 #include <mbedtls/entropy.h>
 #include <mbedtls/ctr_drbg.h>
+#include <mbedtls/oid.h>
 
 #define strp(x) x, strlen(x)
 
@@ -348,12 +349,31 @@ void php_mbedtls_add_key_detail(zval *arr, const char *name, mbedtls_mpi *num)
   zend_hash_str_add(Z_ARRVAL_P(arr), strp(name), &vl);
 }
 
+void php_mbedtls_translate_grpid(mbedtls_ecp_group_id group_id, char *numeric, size_t numeric_len)
+{
+  char *oid;
+  size_t oid_len;
+  mbedtls_asn1_buf oid_buffer;
+
+  oid = NULL;
+  oid_len = 0;
+
+  mbedtls_oid_get_oid_by_ec_grp(group_id, &oid, &oid_len);
+
+  oid_buffer.tag = 0;
+  oid_buffer.len = oid_len;
+  oid_buffer.p = oid;
+
+  mbedtls_oid_get_numeric_string(numeric, numeric_len, &oid_buffer);
+}
+
 PHP_FUNCTION(mbedtls_pkey_get_details)
 {
   zval *key;
   zval vl;
   zval info;
   char output_buf[16000];
+  char numeric[20];
   mbedtls_pk_context *ctx_key;
   mbedtls_rsa_context *ctx_rsa;
   mbedtls_ecp_keypair *ctx_eckey;
@@ -440,6 +460,10 @@ PHP_FUNCTION(mbedtls_pkey_get_details)
     ZVAL_STRING(&vl, curve_info->name);
     zend_hash_str_add(Z_ARRVAL_P(return_value), strp("curve_name"), &vl);
 
+    php_mbedtls_translate_grpid(ctx_eckey->grp.id, numeric, 20);
+    ZVAL_STRING(&vl, numeric);
+    zend_hash_str_add(Z_ARRVAL_P(return_value), strp("curve_oid"), &vl);
+
     php_mbedtls_add_key_detail(&info, "x", &ctx_eckey->Q.X);
     php_mbedtls_add_key_detail(&info, "y", &ctx_eckey->Q.Y);
 
@@ -505,7 +529,8 @@ PHP_FUNCTION(mbedtls_pkey_get_private)
     password_len = 0;
   }
 
-  if (mbedtls_pk_parse_key(ctx_key, key, key_len + 1, password, password_len) != 0)
+  if (mbedtls_pk_parse_key(ctx_key, key, key_len + 1, password, password_len)
+    != 0)
   {
     php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to parse key");
 
