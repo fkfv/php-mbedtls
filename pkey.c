@@ -48,6 +48,7 @@ struct php_pkey_options {
 
 void php_mbedtls_pkey_free(zend_resource *rsrc)
 {
+  mbedtls_pk_free(rsrc->ptr);
   efree(rsrc->ptr);
 }
 
