@@ -25,6 +25,8 @@
 #ifndef PHP_MBEDTLS_H
 #define PHP_MBEDTLS_H
 
+#include <mbedtls/x509_csr.h>
+
 extern zend_module_entry mbedtls_module_entry;
 #define phpext_mbedtls_ptr &mbedtls_module_entry
 
@@ -66,6 +68,14 @@ PHP_FUNCTION(mbedtls_pkey_get_private);
 
 extern int le_csr;
 void php_mbedtls_csr_free(zend_resource *);
+
+struct php_mbedtls_csr {
+  mbedtls_x509write_csr csr_write;
+  mbedtls_x509_csr csr;
+  char *output;
+};
+
+int php_mbedtls_csr_load(struct php_mbedtls_csr **csr, zval *val, int *needs_free);
 
 PHP_FUNCTION(mbedtls_csr_new);
 PHP_FUNCTION(mbedtls_csr_sign);
