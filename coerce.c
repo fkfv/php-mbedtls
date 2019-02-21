@@ -98,3 +98,71 @@ int php_mbedtls_csr_load(struct php_mbedtls_csr **csr, zval *val, int *needs_fre
 
   return 1;
 }
+
+int php_mbedtls_crt_load(mbedtls_x509_crt **crt, zval *val, int *needs_free)
+{
+  const char *pem;
+  char *filename;
+  char *buffer;
+  long size;
+  FILE *f;
+
+  buffer = NULL;
+  filename = NULL;
+  *needs_free = 0;
+
+  if (Z_TYPE_P(val) == IS_STRING)
+  {
+    *crt = (mbedtls_x509_crt *)ecalloc(1, sizeof(struct mbedtls_x509_crt));
+    pem = Z_STRVAL_P(val);
+
+    if (strncasecmp("file://", pem, 7) == 0)
+    {
+      filename = emalloc(strlen(pem) - 6);
+      strncpy(filename, pem + 7, strlen(pem) - 7);
+
+      f = fopen(filename, "rb");
+
+      if (f == NULL)
+      {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "cannot open %s", filename);
+
+        return 0;
+      }
+
+      fseek(f, 0, SEEK_END);
+      size = ftell(f);
+      fseek(f, 0, SEEK_SET);
+
+      buffer = emalloc(size + 1);
+      fread(buffer, 1, size, f);
+      buffer[size] = '\0';
+
+      pem = buffer;
+    }
+
+    mbedtls_x509_crt_init(*crt);
+    mbedtls_x509_crt_parse(*crt, buffer, strlen(buffer));
+
+    *needs_free = 1;
+
+    efree(buffer);
+    efree(filename);
+  }
+  else if (Z_TYPE_P(val) == IS_RESOURCE)
+  {
+    *crt = (mbedtls_x509_crt *)zend_fetch_resource(Z_RES_P(val),
+      MBEDTLS_CRT_RESOURCE, le_crt);
+
+    if (*crt == NULL)
+    {
+      return 0;
+    }
+  }
+  else
+  {
+    return 0;
+  }
+
+  return 1;
+}

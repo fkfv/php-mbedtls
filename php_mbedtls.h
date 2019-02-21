@@ -26,6 +26,7 @@
 #define PHP_MBEDTLS_H
 
 #include <mbedtls/x509_csr.h>
+#include <mbedtls/x509_crt.h>
 
 extern zend_module_entry mbedtls_module_entry;
 #define phpext_mbedtls_ptr &mbedtls_module_entry
@@ -87,5 +88,7 @@ PHP_FUNCTION(mbedtls_csr_export_to_file);
 
 extern int le_crt;
 void php_mbedtls_crt_free(zend_resource *);
+
+int php_mbedtls_crt_load(mbedtls_x509_crt **crt, zval *val, int *needs_free);
 
 #endif	/* PHP_MBEDTLS_H */
