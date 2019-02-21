@@ -271,7 +271,7 @@ PHP_FUNCTION(mbedtls_csr_export)
   zval *out;
   struct php_mbedtls_csr *ctx_csr;
 
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz", &csr, &out)
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rz/", &csr, &out)
     == FAILURE)
   {
     return;
@@ -288,7 +288,7 @@ PHP_FUNCTION(mbedtls_csr_export)
   }
 
   zval_ptr_dtor(out);
-  ZVAL_STRINGL(out, ctx_csr->output, strlen(ctx_csr->output));
+  ZVAL_STRING(out, ctx_csr->output);
 
   RETVAL_TRUE;
 }
