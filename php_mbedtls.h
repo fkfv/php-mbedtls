@@ -27,6 +27,7 @@
 
 #include <mbedtls/x509_csr.h>
 #include <mbedtls/x509_crt.h>
+#include <mbedtls/pk.h>
 
 extern zend_module_entry mbedtls_module_entry;
 #define phpext_mbedtls_ptr &mbedtls_module_entry
@@ -55,6 +56,8 @@ PHP_FUNCTION(mbedtls_ciphers);
 
 extern int le_pkey;
 void php_mbedtls_pkey_free(zend_resource *);
+
+int php_mbedtls_pkey_load(mbedtls_pk_context **pkey, zval *val, int *needs_free);
 
 PHP_FUNCTION(mbedtls_pkey_new);
 PHP_FUNCTION(mbedtls_pkey_free);

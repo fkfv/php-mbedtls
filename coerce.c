@@ -88,6 +88,8 @@ int php_mbedtls_csr_load(struct php_mbedtls_csr **csr, zval *val, int *needs_fre
 
     if (*csr == NULL)
     {
+      php_error_docref(NULL TSRMLS_CC, E_WARNING, "resource is not csr");
+
       return 0;
     }
   }
@@ -156,8 +158,103 @@ int php_mbedtls_crt_load(mbedtls_x509_crt **crt, zval *val, int *needs_free)
 
     if (*crt == NULL)
     {
+      php_error_docref(NULL TSRMLS_CC, E_WARNING, "resource is not cert");
+
       return 0;
     }
+  }
+  else
+  {
+    return 0;
+  }
+
+  return 1;
+}
+
+int php_mbedtls_pkey_load_internal(mbedtls_pk_context **pkey, const char *pem,
+  const char *password)
+{
+  char *buffer;
+  char *filename;
+  long size;
+  FILE *f;
+
+  *pkey = (mbedtls_pk_context *)ecalloc(1, sizeof(struct mbedtls_x509_crt));
+
+  if (strncasecmp("file://", pem, 7) == 0)
+  {
+    filename = emalloc(strlen(pem) - 6);
+    strncpy(filename, pem + 7, strlen(pem) - 7);
+
+    f = fopen(filename, "rb");
+
+    if (f == NULL)
+    {
+      php_error_docref(NULL TSRMLS_CC, E_WARNING, "cannot open %s", filename);
+
+      return 0;
+    }
+
+    fseek(f, 0, SEEK_END);
+    size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+
+    buffer = emalloc(size + 1);
+    fread(buffer, 1, size, f);
+    buffer[size] = '\0';
+
+    pem = buffer;
+  }
+
+  mbedtls_pk_init(*pkey);
+  mbedtls_pk_parse_key(*pkey, buffer, strlen(buffer), password,
+    password == NULL ? 0 : strlen(password));
+
+  efree(buffer);
+  efree(filename);
+
+  return 1;
+}
+
+int php_mbedtls_pkey_load(mbedtls_pk_context **pkey, zval *val, int *needs_free)
+{
+  zval *passphrase;
+  zval *pem;
+
+  if (Z_TYPE_P(val) == IS_STRING)
+  {
+    *needs_free = 1;
+
+    return php_mbedtls_pkey_load_internal(pkey, Z_STRVAL_P(val), NULL);
+  }
+  else if (Z_TYPE_P(val) == IS_RESOURCE)
+  {
+    *pkey = (mbedtls_pk_context *)zend_fetch_resource(Z_RES_P(val),
+      MBEDTLS_PKEY_RESOURCE, le_pkey);
+
+    if (*pkey == NULL)
+    {
+      php_error_docref(NULL TSRMLS_CC, E_WARNING, "resource is not pkey");
+
+      return 0;
+    }
+  }
+  else if (Z_TYPE_P(val) == IS_ARRAY)
+  {
+    *needs_free = 1;
+
+    pem = zend_hash_index_find(Z_ARRVAL_P(val), 0);
+    passphrase = zend_hash_index_find(Z_ARRVAL_P(val), 1);
+
+    if (pem == NULL || passphrase == NULL)
+    {
+      php_error_docref(NULL TSRMLS_CC, E_WARNING, "expected array in form " \
+        "['key', 'passphrase']");
+
+      return 0;
+    }
+
+    return php_mbedtls_pkey_load_internal(pkey, Z_STRVAL_P(pem), Z_STRVAL_P(passphrase));
   }
   else
   {
