@@ -61,4 +61,21 @@ PHP_FUNCTION(mbedtls_pkey_get_details);
 PHP_FUNCTION(mbedtls_pkey_get_public);
 PHP_FUNCTION(mbedtls_pkey_get_private);
 
+// csr.c
+#define MBEDTLS_CSR_RESOURCE "mbedtls csr context"
+
+extern int le_csr;
+void php_mbedtls_csr_free(zend_resource *);
+
+PHP_FUNCTION(mbedtls_csr_new);
+PHP_FUNCTION(mbedtls_csr_sign);
+PHP_FUNCTION(mbedtls_csr_export);
+PHP_FUNCTION(mbedtls_csr_export_to_file);
+
+// crt.c
+#define MBEDTLS_CRT_RESOURCE "mbedtls crt context"
+
+extern int le_crt;
+void php_mbedtls_crt_free(zend_resource *);
+
 #endif	/* PHP_MBEDTLS_H */
