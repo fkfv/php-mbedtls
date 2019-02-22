@@ -565,7 +565,6 @@ PHP_FUNCTION(mbedtls_pkey_get_private)
   size_t key_len;
   size_t password_len;
   mbedtls_pk_context *ctx_key;
-  FILE *f;
 
   password = NULL;
   password_len = 0;

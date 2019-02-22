@@ -163,6 +163,8 @@ int php_mbedtls_pkey_load(mbedtls_pk_context **pkey, zval *val, int *needs_free)
   zval *passphrase;
   zval *pem;
 
+  *needs_free = 0;
+
   if (Z_TYPE_P(val) == IS_STRING)
   {
     *needs_free = 1;
