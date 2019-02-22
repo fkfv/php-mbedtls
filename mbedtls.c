@@ -135,6 +135,12 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_x509_export_to_file, 0, 0, 2)
   ZEND_ARG_INFO(0, file)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_x509_fingerprint, 0, 0, 1)
+  ZEND_ARG_INFO(0, crt)
+  ZEND_ARG_INFO(0, hash_algorithm)
+  ZEND_ARG_INFO(0, raw_output)
+ZEND_END_ARG_INFO()
+
 int le_pkey = 0;
 int le_csr = 0;
 int le_crt = 0;
@@ -194,6 +200,7 @@ static const zend_function_entry mbedtls_functions[] = {
   PHP_FE(mbedtls_x509_free          , arginfo_mbedtls_x509_free)
   PHP_FE(mbedtls_x509_export        , arginfo_mbedtls_x509_export)
   PHP_FE(mbedtls_x509_export_to_file, arginfo_mbedtls_x509_export_to_file)
+  PHP_FE(mbedtls_x509_fingerprint   , arginfo_mbedtls_x509_fingerprint)
   PHP_FE_END
 };
 

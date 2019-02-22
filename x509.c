@@ -27,12 +27,12 @@
 #endif
 
 #include "php.h"
-#include "Zend/zend_API.h"
-#include "Zend/zend_smart_str.h"
+#include "ext/hash/php_hash.h"
 #include "php_mbedtls.h"
 
 #include <mbedtls/x509_crt.h>
 #include <mbedtls/pem.h>
+#include <mbedtls/md.h>
 
 void php_mbedtls_crt_free(zend_resource *rsrc)
 {
@@ -42,8 +42,7 @@ void php_mbedtls_crt_free(zend_resource *rsrc)
 
 PHP_FUNCTION(mbedtls_x509_free)
 {
-  zval *x509
-  ;
+  zval *x509;
 
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &x509) == FAILURE)
   {
@@ -134,3 +133,74 @@ PHP_FUNCTION(mbedtls_x509_export_to_file)
   RETVAL_TRUE;
 }
 
+PHP_FUNCTION(mbedtls_x509_fingerprint)
+{
+  zval *crt;
+  char *hash_algorithm;
+  char *raw_fingerprint;
+  char *fingerprint;
+  size_t hash_algorithm_len;
+  size_t raw_length;
+  int free;
+  zend_bool raw_output;
+  mbedtls_x509_crt *ctx_crt;
+  mbedtls_md_context_t ctx_md;
+  const mbedtls_md_info_t* digest;
+
+  hash_algorithm = "SHA1";
+  raw_output = 0;
+
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|sb", &crt,
+    &hash_algorithm, &hash_algorithm_len, &raw_output) == FAILURE)
+  {
+    return;
+  }
+
+  digest = mbedtls_md_info_from_string(hash_algorithm);
+
+  if (digest == NULL)
+  {
+    php_error_docref(NULL TSRMLS_CC, E_WARNING, "digest algorithm %s not" \
+      " found", hash_algorithm);
+
+    return;
+  }
+
+  if (php_mbedtls_crt_load(&ctx_crt, crt, &free) == 0)
+  {
+    php_error_docref(NULL TSRMLS_CC, E_WARNING, "invalid crt");
+
+    return;
+  }
+
+  mbedtls_md_init(&ctx_md);
+  mbedtls_md_setup(&ctx_md, digest, 0);
+
+  mbedtls_md_starts(&ctx_md);
+  mbedtls_md_update(&ctx_md, ctx_crt->raw.p, ctx_crt->raw.len);
+
+  raw_length = mbedtls_md_get_size(digest);
+  raw_fingerprint = ecalloc(1, raw_length);
+
+  mbedtls_md_finish(&ctx_md, raw_fingerprint);
+  mbedtls_md_free(&ctx_md);
+
+  if (free)
+  {
+    mbedtls_x509_crt_free(ctx_crt);
+    efree(ctx_crt);
+  }
+
+  if (raw_output == 1)
+  {
+    RETURN_STRINGL(raw_fingerprint, raw_length);
+  }
+
+  fingerprint = ecalloc(1, raw_length * 2 + 1);
+  php_hash_bin2hex(fingerprint, raw_fingerprint, raw_length);
+
+  RETVAL_STRING(fingerprint);
+
+  efree(fingerprint);
+  efree(raw_fingerprint);
+}

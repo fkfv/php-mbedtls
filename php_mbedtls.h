@@ -93,5 +93,6 @@ int php_mbedtls_crt_load(mbedtls_x509_crt **crt, zval *val, int *needs_free);
 PHP_FUNCTION(mbedtls_x509_free);
 PHP_FUNCTION(mbedtls_x509_export);
 PHP_FUNCTION(mbedtls_x509_export_to_file);
+PHP_FUNCTION(mbedtls_x509_fingerprint);
 
 #endif	/* PHP_MBEDTLS_H */
