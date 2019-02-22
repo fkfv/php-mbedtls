@@ -155,7 +155,23 @@ PHP_FUNCTION(mbedtls_csr_new)
   RETURN_RES(zend_register_resource(csr, le_csr));
 }
 
-#define MBEDTLS_CERT_VERSION_3 2
+void php_mbedtls_format_validity(char *begin, char *end, zend_long days)
+{
+  time_t now;
+  struct tm valid_until = { 0 };
+  struct tm *valid_from;
+
+  time(&now);
+  valid_from = gmtime(&now);
+
+  memcpy(&valid_until, valid_from, sizeof(struct tm));
+
+  valid_until.tm_mday += days;
+  mktime(&valid_until);
+
+  strftime(begin, 15, "%Y%m%d%H%M%S", valid_from);
+  strftime(end, 15, "%Y%m%d%H%M%S", &valid_until);
+}
 
 PHP_FUNCTION(mbedtls_csr_sign)
 {
@@ -168,6 +184,8 @@ PHP_FUNCTION(mbedtls_csr_sign)
   zend_long serial;
   char subject[4096];
   char output[4096];
+  char begin_validity[15];
+  char end_validity[15];
   mbedtls_x509_csr *ctx_csr;
   mbedtls_pk_context *ctx_capriv;
   mbedtls_x509write_cert crt;
@@ -210,13 +228,13 @@ PHP_FUNCTION(mbedtls_csr_sign)
   ctx_csr = (mbedtls_x509_csr *)zend_fetch_resource(Z_RES_P(csr),
     MBEDTLS_CSR_RESOURCE, le_csr);
   ctx_capriv = (mbedtls_pk_context *)zend_fetch_resource(Z_RES_P(cakey),
-	  MBEDTLS_PKEY_RESOURCE, le_pkey);
+    MBEDTLS_PKEY_RESOURCE, le_pkey);
 
   if (ctx_capriv == NULL)
   {
-	  php_error_docref(NULL TSRMLS_CC, E_WARNING, "ca private key not provided");
+    php_error_docref(NULL TSRMLS_CC, E_WARNING, "ca private key not provided");
 
-	  return;
+    return;
   }
 
   if (ca != NULL)
@@ -237,28 +255,33 @@ PHP_FUNCTION(mbedtls_csr_sign)
     strp("mbedtls_csr_sign"));
   mbedtls_mpi_lset(&bnserial, serial);
 
+  mbedtls_x509write_crt_set_serial(&crt, &bnserial);
+
   mbedtls_x509_dn_gets(subject, 4096, &ctx_csr->subject);
   mbedtls_x509write_crt_set_subject_name(&crt, subject);
 
   if (ca != NULL)
   {
     mbedtls_x509_dn_gets(subject, 4096, &ctx_ca->subject);
-    mbedtls_x509write_crt_set_issuer_name(&crt, subject);
   }
+
+  mbedtls_x509write_crt_set_issuer_name(&crt, subject);
 
   mbedtls_x509write_crt_set_subject_key(&crt, &ctx_csr->pk);
   mbedtls_x509write_crt_set_issuer_key(&crt, ctx_capriv);
 
-  mbedtls_x509write_crt_set_version(&crt, MBEDTLS_CERT_VERSION_3);
+  php_mbedtls_format_validity(begin_validity, end_validity, days);
+
+  mbedtls_x509write_crt_set_version(&crt, MBEDTLS_X509_CRT_VERSION_3);
   mbedtls_x509write_crt_set_md_alg(&crt, digest->type);
-  mbedtls_x509write_crt_set_validity(&crt, "0", "20301231235959");
+  mbedtls_x509write_crt_set_validity(&crt, begin_validity, end_validity);
   mbedtls_x509write_crt_set_basic_constraints(&crt, ctx_ca == NULL, -1);
   mbedtls_x509write_crt_set_subject_key_identifier(&crt);
   mbedtls_x509write_crt_set_authority_key_identifier(&crt);
 
   mbedtls_x509write_crt_pem(&crt, output, 4096, mbedtls_ctr_drbg_random,
     &ctx_drbg);
-  mbedtls_x509_crt_parse(ctx_crt, strp(output));
+  mbedtls_x509_crt_parse(ctx_crt, strp(output) + 1);
 
   mbedtls_x509write_crt_free(&crt);
   mbedtls_ctr_drbg_free(&ctx_drbg);
