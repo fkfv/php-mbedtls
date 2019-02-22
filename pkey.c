@@ -533,12 +533,12 @@ PHP_FUNCTION(mbedtls_pkey_get_details)
 
 PHP_FUNCTION(mbedtls_pkey_get_public)
 {
-  char *key;
-  size_t key_len;
+  zval *key;
+  char *filename;
   mbedtls_pk_context *ctx_key;
+  mbedtls_x509_crt *ctx_crt;
 
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &key, &key_len)
-    == FAILURE)
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &key) == FAILURE)
   {
     return;
   }
@@ -547,9 +547,55 @@ PHP_FUNCTION(mbedtls_pkey_get_public)
 
   mbedtls_pk_init(ctx_key);
 
-  if (mbedtls_pk_parse_public_key(ctx_key, key, key_len + 1) != 0)
+  if (Z_TYPE_P(key) == IS_RESOURCE)
+  {
+    ctx_crt = (mbedtls_x509_crt *)zend_fetch_resource(Z_RES_P(key),
+      MBEDTLS_CRT_RESOURCE, le_crt);
+
+    if (ctx_crt == NULL)
+    {
+      php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to parse key");
+      efree(ctx_key);
+
+      return;
+    }
+
+    memcpy(ctx_key, &ctx_crt->pk, sizeof(mbedtls_pk_context));
+  }
+  else if (Z_TYPE_P(key) == IS_STRING)
+  {
+    if (strncasecmp("file://", Z_STRVAL_P(key), 7) == 0)
+    {
+      filename = emalloc(Z_STRLEN_P(key) - 6);
+      strncpy(filename, Z_STRVAL_P(key) + 7, Z_STRLEN_P(key) - 7);
+
+      if (mbedtls_pk_parse_public_keyfile(ctx_key, filename) != 0)
+      {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to parse key");
+        efree(ctx_key);
+        efree(filename);
+
+        return;
+      }
+
+      efree(filename);
+    }
+    else
+    {
+      if (mbedtls_pk_parse_public_key(ctx_key, Z_STRVAL_P(key),
+        Z_STRLEN_P(key) + 1) != 0)
+      {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to parse key");
+        efree(ctx_key);
+
+        return;
+      }
+    }
+  }
+  else
   {
     php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to parse key");
+    efree(ctx_key);
 
     return;
   }
