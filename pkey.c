@@ -222,18 +222,16 @@ PHP_FUNCTION(mbedtls_pkey_export)
   zval *key;
   zval *out;
   char output_buf[16000];
+  int free;
   mbedtls_pk_context *ctx_key;
 
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rz/", &key, &out)
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz/", &key, &out)
     == FAILURE)
   {
     return;
   }
 
-  ctx_key = (mbedtls_pk_context *)zend_fetch_resource(Z_RES_P(key),
-    MBEDTLS_PKEY_RESOURCE, le_pkey);
-
-  if (ctx_key == NULL)
+  if (php_mbedtls_pkey_load(&ctx_key, key, &free) == 0)
   {
     php_error_docref(NULL TSRMLS_CC, E_WARNING, "invalid key");
 
@@ -246,6 +244,12 @@ PHP_FUNCTION(mbedtls_pkey_export)
     {
       php_error_docref(NULL TSRMLS_CC, E_WARNING, "not a private key");
 
+      if (free)
+      {
+        mbedtls_pk_free(ctx_key);
+        efree(ctx_key);
+      }
+
       return;
     }
   }
@@ -256,6 +260,12 @@ PHP_FUNCTION(mbedtls_pkey_export)
     {
       php_error_docref(NULL TSRMLS_CC, E_WARNING, "not a private key");
 
+      if (free)
+      {
+        mbedtls_pk_free(ctx_key);
+        efree(ctx_key);
+      }
+
       return;
     }
   }
@@ -265,7 +275,19 @@ PHP_FUNCTION(mbedtls_pkey_export)
     zval_ptr_dtor(out);
     ZVAL_STRINGL(out, output_buf, strlen(output_buf));
 
+    if (free)
+    {
+      mbedtls_pk_free(ctx_key);
+      efree(ctx_key);
+    }
+
     RETURN_TRUE;
+  }
+
+  if (free)
+  {
+    mbedtls_pk_free(ctx_key);
+    efree(ctx_key);
   }
 
   RETVAL_FALSE;
@@ -277,19 +299,17 @@ PHP_FUNCTION(mbedtls_pkey_export_to_file)
   char *file;
   char output_buf[16000];
   size_t file_len;
+  int free;
   mbedtls_pk_context *ctx_key;
   FILE *f;
 
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rp", &key, &file,
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zp", &key, &file,
     &file_len) == FAILURE)
   {
     return;
   }
 
-  ctx_key = (mbedtls_pk_context *)zend_fetch_resource(Z_RES_P(key),
-    MBEDTLS_PKEY_RESOURCE, le_pkey);
-
-  if (ctx_key == NULL)
+  if (php_mbedtls_pkey_load(&ctx_key, key, &free) == 0)
   {
     php_error_docref(NULL TSRMLS_CC, E_WARNING, "invalid key");
 
@@ -302,6 +322,12 @@ PHP_FUNCTION(mbedtls_pkey_export_to_file)
     {
       php_error_docref(NULL TSRMLS_CC, E_WARNING, "not a private key");
 
+      if (free)
+      {
+        mbedtls_pk_free(ctx_key);
+        efree(ctx_key);
+      }
+
       return;
     }
   }
@@ -311,6 +337,12 @@ PHP_FUNCTION(mbedtls_pkey_export_to_file)
       &mbedtls_pk_ec(*ctx_key)->d) != 0)
     {
       php_error_docref(NULL TSRMLS_CC, E_WARNING, "not a private key");
+
+      if (free)
+      {
+        mbedtls_pk_free(ctx_key);
+        efree(ctx_key);
+      }
 
       return;
     }
@@ -325,13 +357,31 @@ PHP_FUNCTION(mbedtls_pkey_export_to_file)
       php_error_docref(NULL TSRMLS_CC, E_WARNING, "cannot output to file: %s",
         strerror(errno));
 
+      if (free)
+      {
+        mbedtls_pk_free(ctx_key);
+        efree(ctx_key);
+      }
+
       RETURN_FALSE;
     }
 
     fwrite(output_buf, 1, strlen(output_buf), f);
     fclose(f);
 
+    if (free)
+    {
+      mbedtls_pk_free(ctx_key);
+      efree(ctx_key);
+    }
+
     RETURN_TRUE;
+  }
+
+  if (free)
+  {
+    mbedtls_pk_free(ctx_key);
+    efree(ctx_key);
   }
 
   RETVAL_FALSE;
@@ -375,6 +425,7 @@ PHP_FUNCTION(mbedtls_pkey_get_details)
   zval info;
   char output_buf[16000];
   char numeric[20];
+  int free;
   mbedtls_pk_context *ctx_key;
   mbedtls_rsa_context *ctx_rsa;
   mbedtls_ecp_keypair *ctx_eckey;
@@ -389,15 +440,12 @@ PHP_FUNCTION(mbedtls_pkey_get_details)
   mbedtls_mpi DQ;
   mbedtls_mpi QP;
 
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &key) == FAILURE)
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &key) == FAILURE)
   {
     return;
   }
 
-  ctx_key = (mbedtls_pk_context *)zend_fetch_resource(Z_RES_P(key),
-    MBEDTLS_PKEY_RESOURCE, le_pkey);
-
-  if (ctx_key == NULL)
+  if (php_mbedtls_pkey_load(&ctx_key, key, &free) == 0)
   {
     php_error_docref(NULL TSRMLS_CC, E_WARNING, "invalid key");
 
@@ -475,6 +523,12 @@ PHP_FUNCTION(mbedtls_pkey_get_details)
 
     zend_hash_str_add(Z_ARRVAL_P(return_value), strp("ec"), &info);
   }
+
+  if (free)
+  {
+    mbedtls_pk_free(ctx_key);
+    efree(ctx_key);
+  }
 }
 
 PHP_FUNCTION(mbedtls_pkey_get_public)
@@ -506,10 +560,12 @@ PHP_FUNCTION(mbedtls_pkey_get_public)
 PHP_FUNCTION(mbedtls_pkey_get_private)
 {
   char *key;
-  size_t key_len;
   char *password;
+  char *filename;
+  size_t key_len;
   size_t password_len;
   mbedtls_pk_context *ctx_key;
+  FILE *f;
 
   password = NULL;
   password_len = 0;
@@ -530,12 +586,27 @@ PHP_FUNCTION(mbedtls_pkey_get_private)
     password_len = 0;
   }
 
-  if (mbedtls_pk_parse_key(ctx_key, key, key_len + 1, password, password_len)
-    != 0)
+  if (strncasecmp("file://", key, 7) == 0)
   {
-    php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to parse key");
+    filename = emalloc(strlen(key) - 6);
+    strncpy(filename, key + 7, strlen(key) - 7);
 
-    return;
+    if (mbedtls_pk_parse_keyfile(ctx_key, filename, password) != 0)
+    {
+      php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to parse key");
+
+      return;
+    }
+  }
+  else
+  {
+    if (mbedtls_pk_parse_key(ctx_key, key, key_len + 1, password, password_len)
+      != 0)
+    {
+      php_error_docref(NULL TSRMLS_CC, E_WARNING, "failed to parse key");
+
+      return;
+    }
   }
 
   RETURN_RES(zend_register_resource(ctx_key, le_pkey));
