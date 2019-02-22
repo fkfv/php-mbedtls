@@ -40,12 +40,6 @@
 
 #define strp(x) x, strlen(x)
 
-struct php_mbedtls_csr {
-  mbedtls_x509write_csr csr_write;
-  mbedtls_x509_csr csr;
-  char *output;
-};
-
 void php_mbedtls_csr_free(zend_resource *rsrc)
 {
   struct php_mbedtls_csr *csr;

@@ -25,6 +25,10 @@
 #ifndef PHP_MBEDTLS_H
 #define PHP_MBEDTLS_H
 
+#include <mbedtls/x509_csr.h>
+#include <mbedtls/x509_crt.h>
+#include <mbedtls/pk.h>
+
 extern zend_module_entry mbedtls_module_entry;
 #define phpext_mbedtls_ptr &mbedtls_module_entry
 
@@ -53,6 +57,8 @@ PHP_FUNCTION(mbedtls_ciphers);
 extern int le_pkey;
 void php_mbedtls_pkey_free(zend_resource *);
 
+int php_mbedtls_pkey_load(mbedtls_pk_context **pkey, zval *val, int *needs_free);
+
 PHP_FUNCTION(mbedtls_pkey_new);
 PHP_FUNCTION(mbedtls_pkey_free);
 PHP_FUNCTION(mbedtls_pkey_export);
@@ -67,6 +73,14 @@ PHP_FUNCTION(mbedtls_pkey_get_private);
 extern int le_csr;
 void php_mbedtls_csr_free(zend_resource *);
 
+struct php_mbedtls_csr {
+  mbedtls_x509write_csr csr_write;
+  mbedtls_x509_csr csr;
+  char *output;
+};
+
+int php_mbedtls_csr_load(struct php_mbedtls_csr **csr, zval *val, int *needs_free);
+
 PHP_FUNCTION(mbedtls_csr_new);
 PHP_FUNCTION(mbedtls_csr_sign);
 PHP_FUNCTION(mbedtls_csr_export);
@@ -77,5 +91,7 @@ PHP_FUNCTION(mbedtls_csr_export_to_file);
 
 extern int le_crt;
 void php_mbedtls_crt_free(zend_resource *);
+
+int php_mbedtls_crt_load(mbedtls_x509_crt **crt, zval *val, int *needs_free);
 
 #endif	/* PHP_MBEDTLS_H */
