@@ -37,19 +37,18 @@
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/md.h>
 #include <mbedtls/md_internal.h>
+#include <mbedtls/pem.h>
 
 #define strp(x) x, strlen(x)
 
 void php_mbedtls_csr_free(zend_resource *rsrc)
 {
-  struct php_mbedtls_csr *csr;
+  mbedtls_x509_csr *csr;
 
-  csr = (struct php_mbedtls_csr *)rsrc->ptr;
+  csr = (mbedtls_x509_csr *)rsrc->ptr;
 
-  mbedtls_x509write_csr_free(&csr->csr_write);
-  mbedtls_x509_csr_free(&csr->csr);
-
-  efree(csr->output);
+  mbedtls_x509_csr_free(csr);
+  efree(csr);
 }
 
 static void php_mbedtls_create_subject(zend_string **subject, zval *arr)
@@ -87,8 +86,10 @@ PHP_FUNCTION(mbedtls_csr_new)
   zval *configargs;
   zval *configarg;
   zend_string *subject;
+  char output[4096];
   mbedtls_pk_context *ctx_key;
-  struct php_mbedtls_csr *csr;
+  mbedtls_x509_csr *csr;
+  mbedtls_x509write_csr csr_write;
   mbedtls_ctr_drbg_context ctx_drbg;
   mbedtls_entropy_context ctx_entropy;
   const mbedtls_md_info_t* digest;
@@ -122,8 +123,7 @@ PHP_FUNCTION(mbedtls_csr_new)
 
   ctx_key = (mbedtls_pk_context *)zend_fetch_resource(Z_RES_P(key),
     MBEDTLS_PKEY_RESOURCE, le_pkey);
-  csr = (struct php_mbedtls_csr *)ecalloc(1, sizeof(struct php_mbedtls_csr));
-  csr->output = emalloc(4096);
+  csr = (mbedtls_x509_csr *)ecalloc(1, sizeof(mbedtls_x509_csr));
 
   if (ctx_key == NULL)
   {
@@ -134,20 +134,20 @@ PHP_FUNCTION(mbedtls_csr_new)
 
   php_mbedtls_create_subject(&subject, dn);
 
-  mbedtls_x509write_csr_init(&csr->csr_write);
-  mbedtls_x509_csr_init(&csr->csr);
+  mbedtls_x509write_csr_init(&csr_write);
+  mbedtls_x509_csr_init(csr);
   mbedtls_ctr_drbg_init(&ctx_drbg);
   mbedtls_entropy_init(&ctx_entropy);
 
   mbedtls_ctr_drbg_seed(&ctx_drbg, mbedtls_entropy_func, &ctx_entropy,
     strp("mbedtls_csr_new"));
 
-  mbedtls_x509write_csr_set_md_alg(&csr->csr_write, digest->type);
-  mbedtls_x509write_csr_set_subject_name(&csr->csr_write, ZSTR_VAL(subject));
-  mbedtls_x509write_csr_set_key(&csr->csr_write, ctx_key);
+  mbedtls_x509write_csr_set_md_alg(&csr_write, digest->type);
+  mbedtls_x509write_csr_set_subject_name(&csr_write, ZSTR_VAL(subject));
+  mbedtls_x509write_csr_set_key(&csr_write, ctx_key);
 
-  mbedtls_x509write_csr_pem(&csr->csr_write, csr->output, 4096, mbedtls_ctr_drbg_random, &ctx_drbg);
-  mbedtls_x509_csr_parse(&csr->csr, strp(csr->output));
+  mbedtls_x509write_csr_pem(&csr_write, output, 4096, mbedtls_ctr_drbg_random, &ctx_drbg);
+  mbedtls_x509_csr_parse(csr, strp(output) + 1);
 
   mbedtls_ctr_drbg_free(&ctx_drbg);
   mbedtls_entropy_free(&ctx_entropy);
@@ -168,7 +168,7 @@ PHP_FUNCTION(mbedtls_csr_sign)
   zend_long serial;
   char subject[4096];
   char output[4096];
-  struct php_mbedtls_csr *ctx_csr;
+  mbedtls_x509_csr *ctx_csr;
   mbedtls_pk_context *ctx_capriv;
   mbedtls_x509write_cert crt;
   mbedtls_x509_crt *ctx_crt;
@@ -207,21 +207,25 @@ PHP_FUNCTION(mbedtls_csr_sign)
     }
   }
 
-  ctx_csr = (struct php_mbedtls_csr *)zend_fetch_resource(Z_RES_P(csr),
+  ctx_csr = (mbedtls_x509_csr *)zend_fetch_resource(Z_RES_P(csr),
     MBEDTLS_CSR_RESOURCE, le_csr);
-  ctx_ca = (mbedtls_x509_crt *)zend_fetch_resource(Z_RES_P(ca),
-    MBEDTLS_CRT_RESOURCE, le_crt);
-
-  if (ctx_ca != NULL)
+  
+  if (ca != NULL)
   {
-    ctx_capriv = (mbedtls_pk_context *)zend_fetch_resource(Z_RES_P(cakey),
-      MBEDTLS_PKEY_RESOURCE, le_pkey);
+    ctx_ca = (mbedtls_x509_crt *)zend_fetch_resource(Z_RES_P(ca),
+      MBEDTLS_CRT_RESOURCE, le_crt);
 
-    if (ctx_capriv == NULL)
+    if (ctx_ca != NULL)
     {
-      php_error_docref(NULL TSRMLS_CC, E_WARNING, "ca private key not provided");
+      ctx_capriv = (mbedtls_pk_context *)zend_fetch_resource(Z_RES_P(cakey),
+        MBEDTLS_PKEY_RESOURCE, le_pkey);
 
-      return;
+      if (ctx_capriv == NULL)
+      {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "ca private key not provided");
+
+        return;
+      }
     }
   }
 
@@ -237,13 +241,13 @@ PHP_FUNCTION(mbedtls_csr_sign)
     strp("mbedtls_csr_sign"));
   mbedtls_mpi_lset(&bnserial, serial);
 
-  mbedtls_x509_dn_gets(subject, 4096, &ctx_csr->csr.subject);
+  mbedtls_x509_dn_gets(subject, 4096, &ctx_csr->subject);
   mbedtls_x509write_crt_set_subject_name(&crt, subject);
 
   mbedtls_x509_dn_gets(subject, 4096, &ctx_ca->subject);
   mbedtls_x509write_crt_set_issuer_name(&crt, subject);
 
-  mbedtls_x509write_crt_set_subject_key(&crt, &ctx_csr->csr.pk);
+  mbedtls_x509write_crt_set_subject_key(&crt, &ctx_csr->pk);
   mbedtls_x509write_crt_set_issuer_key(&crt, ctx_capriv);
 
   mbedtls_x509write_crt_set_version(&crt, MBEDTLS_CERT_VERSION_3);
@@ -265,11 +269,16 @@ PHP_FUNCTION(mbedtls_csr_sign)
   RETURN_RES(zend_register_resource(ctx_crt, le_crt));
 }
 
+#define CSR_HEADER "-----BEGIN CERTIFICATE REQUEST-----\n"
+#define CSR_FOOTER "-----END CERTIFICATE REQUEST-----\n"
+
 PHP_FUNCTION(mbedtls_csr_export)
 {
   zval *csr;
   zval *out;
-  struct php_mbedtls_csr *ctx_csr;
+  char pem[4096];
+  size_t pem_length;
+  mbedtls_x509_csr *ctx_csr;
 
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rz/", &csr, &out)
     == FAILURE)
@@ -277,7 +286,7 @@ PHP_FUNCTION(mbedtls_csr_export)
     return;
   }
 
-  ctx_csr = (struct php_mbedtls_csr *)zend_fetch_resource(Z_RES_P(csr),
+  ctx_csr = (mbedtls_x509_csr *)zend_fetch_resource(Z_RES_P(csr),
     MBEDTLS_CSR_RESOURCE, le_csr);
 
   if (ctx_csr == NULL)
@@ -288,7 +297,9 @@ PHP_FUNCTION(mbedtls_csr_export)
   }
 
   zval_ptr_dtor(out);
-  ZVAL_STRING(out, ctx_csr->output);
+  mbedtls_pem_write_buffer(CSR_HEADER, CSR_FOOTER, ctx_csr->raw.p,
+    ctx_csr->raw.len, pem, 4096, &pem_length);
+  ZVAL_STRING(out, pem);
 
   RETVAL_TRUE;
 }
@@ -297,8 +308,10 @@ PHP_FUNCTION(mbedtls_csr_export_to_file)
 {
   zval *csr;
   char *file;
+  char pem[4096];
   size_t file_len;
-  struct php_mbedtls_csr *ctx_csr;
+  size_t pem_length;
+  mbedtls_x509_csr *ctx_csr;
   FILE *f;
 
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zp", &csr, &file,
@@ -307,7 +320,7 @@ PHP_FUNCTION(mbedtls_csr_export_to_file)
     return;
   }
 
-  ctx_csr = (struct php_mbedtls_csr *)zend_fetch_resource(Z_RES_P(csr),
+  ctx_csr = (mbedtls_x509_csr *)zend_fetch_resource(Z_RES_P(csr),
     MBEDTLS_CSR_RESOURCE, le_csr);
 
   if (ctx_csr == NULL)
@@ -316,6 +329,9 @@ PHP_FUNCTION(mbedtls_csr_export_to_file)
 
     return;
   }
+
+  mbedtls_pem_write_buffer(CSR_HEADER, CSR_FOOTER, ctx_csr->raw.p,
+    ctx_csr->raw.len, pem, 4096, &pem_length);
 
   f = fopen(file, "wb");
 
@@ -327,7 +343,7 @@ PHP_FUNCTION(mbedtls_csr_export_to_file)
     RETURN_FALSE;
   }
 
-  fwrite(ctx_csr->output, 1, strlen(ctx_csr->output), f);
+  fwrite(pem, 1, strlen(pem), f);
   fclose(f);
 
   RETVAL_TRUE;

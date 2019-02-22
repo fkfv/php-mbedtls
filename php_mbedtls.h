@@ -73,13 +73,7 @@ PHP_FUNCTION(mbedtls_pkey_get_private);
 extern int le_csr;
 void php_mbedtls_csr_free(zend_resource *);
 
-struct php_mbedtls_csr {
-  mbedtls_x509write_csr csr_write;
-  mbedtls_x509_csr csr;
-  char *output;
-};
-
-int php_mbedtls_csr_load(struct php_mbedtls_csr **csr, zval *val, int *needs_free);
+int php_mbedtls_csr_load(mbedtls_x509_csr **csr, zval *val, int *needs_free);
 
 PHP_FUNCTION(mbedtls_csr_new);
 PHP_FUNCTION(mbedtls_csr_sign);

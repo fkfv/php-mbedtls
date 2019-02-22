@@ -29,7 +29,7 @@
 #include "php.h"
 #include "php_mbedtls.h"
 
-int php_mbedtls_csr_load(struct php_mbedtls_csr **csr, zval *val, int *needs_free)
+int php_mbedtls_csr_load(mbedtls_x509_csr **csr, zval *val, int *needs_free)
 {
   const char *pem;
   char *filename;
@@ -39,31 +39,30 @@ int php_mbedtls_csr_load(struct php_mbedtls_csr **csr, zval *val, int *needs_fre
 
   if (Z_TYPE_P(val) == IS_STRING)
   {
-    *csr = (struct php_mbedtls_csr *)ecalloc(1, sizeof(struct php_mbedtls_csr));
+    *csr = (mbedtls_x509_csr *)ecalloc(1, sizeof(mbedtls_x509_csr));
     pem = Z_STRVAL_P(val);
 
-    mbedtls_x509write_csr_init(&(*csr)->csr_write);
-    mbedtls_x509_csr_init(&(*csr)->csr);
+    mbedtls_x509_csr_init(*csr);
 
     if (strncasecmp("file://", pem, 7) == 0)
     {
       filename = emalloc(strlen(pem) - 6);
       strncpy(filename, pem + 7, strlen(pem) - 7);
 
-      mbedtls_x509_csr_parse_file(&(*csr)->csr, filename);
+      mbedtls_x509_csr_parse_file(*csr, filename);
 
       efree(filename);
     }
     else
     {
-      mbedtls_x509_csr_parse(&(*csr)->csr, pem, strlen(pem));
+      mbedtls_x509_csr_parse(*csr, pem, strlen(pem));
     }
 
     *needs_free = 1;
   }
   else if (Z_TYPE_P(val) == IS_RESOURCE)
   {
-    *csr = (struct php_mbedtls_csr *)zend_fetch_resource(Z_RES_P(val),
+    *csr = (mbedtls_x509_csr *)zend_fetch_resource(Z_RES_P(val),
       MBEDTLS_CSR_RESOURCE, le_csr);
 
     if (*csr == NULL)
