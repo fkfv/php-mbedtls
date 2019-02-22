@@ -121,6 +121,20 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_csr_get_public_key, 0, 0, 1)
   ZEND_ARG_INFO(0, csr)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_x509_free, 0, 0, 1)
+  ZEND_ARG_INFO(0, crt)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_x509_export, 0, 0, 2)
+  ZEND_ARG_INFO(0, crt)
+  ZEND_ARG_INFO(1, out)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_x509_export_to_file, 0, 0, 2)
+  ZEND_ARG_INFO(0, crt)
+  ZEND_ARG_INFO(0, file)
+ZEND_END_ARG_INFO()
+
 int le_pkey = 0;
 int le_csr = 0;
 int le_crt = 0;
@@ -140,7 +154,7 @@ PHP_MINIT_FUNCTION(mbedtls)
   // csr.c
   le_csr = zend_register_list_destructors_ex(php_mbedtls_csr_free, NULL, MBEDTLS_CSR_RESOURCE, module_number);
 
-  // crt.c
+  // x509.c
   le_crt = zend_register_list_destructors_ex(php_mbedtls_crt_free, NULL, MBEDTLS_CRT_RESOURCE, module_number);
 
   return SUCCESS;
@@ -175,6 +189,11 @@ static const zend_function_entry mbedtls_functions[] = {
   PHP_FE(mbedtls_csr_export_to_file, arginfo_mbedtls_csr_export_to_file)
   PHP_FE(mbedtls_csr_get_subject   , arginfo_mbedtls_csr_get_subject)
   PHP_FE(mbedtls_csr_get_public_key, arginfo_mbedtls_csr_get_public_key)
+
+  // x509.c
+  PHP_FE(mbedtls_x509_free          , arginfo_mbedtls_x509_free)
+  PHP_FE(mbedtls_x509_export        , arginfo_mbedtls_x509_export)
+  PHP_FE(mbedtls_x509_export_to_file, arginfo_mbedtls_x509_export_to_file)
   PHP_FE_END
 };
 
