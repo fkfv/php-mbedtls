@@ -347,3 +347,58 @@ PHP_FUNCTION(mbedtls_csr_export_to_file)
 
   RETVAL_TRUE;
 }
+
+PHP_FUNCTION(mbedtls_csr_get_subject)
+{
+  zval *csr;
+  char subject[4096];
+  int free;
+  mbedtls_x509_csr *ctx_csr;
+
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &csr) == FAILURE)
+  {
+    return;
+  }
+
+  if (php_mbedtls_csr_load(&ctx_csr, csr, &free) == 0)
+  {
+    php_error_docref(NULL TSRMLS_CC, E_WARNING, "invalid csr");
+
+    return;
+  }
+
+  mbedtls_x509_dn_gets(subject, 4096, &ctx_csr->subject);
+
+  if (free)
+  {
+    mbedtls_x509_csr_free(ctx_csr);
+    efree(ctx_csr);
+  }
+
+  RETVAL_STRING(subject);
+}
+
+PHP_FUNCTION(mbedtls_csr_get_public_key)
+{
+  zval *csr;
+  int free;
+  mbedtls_x509_csr *ctx_csr;
+  mbedtls_pk_context *ctx_key;
+
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &csr) == FAILURE)
+  {
+    return;
+  }
+
+  if (php_mbedtls_csr_load(&ctx_csr, csr, &free) == 0)
+  {
+    php_error_docref(NULL TSRMLS_CC, E_WARNING, "invalid csr");
+
+    return;
+  }
+
+  ctx_key = (mbedtls_pk_context *)calloc(1, sizeof(mbedtls_pk_context));
+  memcpy(ctx_key, &ctx_csr->pk, sizeof(mbedtls_pk_context));
+
+  RETURN_RES(zend_register_resource(ctx_key, le_pkey));
+}

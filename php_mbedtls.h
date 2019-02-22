@@ -79,8 +79,10 @@ PHP_FUNCTION(mbedtls_csr_new);
 PHP_FUNCTION(mbedtls_csr_sign);
 PHP_FUNCTION(mbedtls_csr_export);
 PHP_FUNCTION(mbedtls_csr_export_to_file);
+PHP_FUNCTION(mbedtls_csr_get_subject);
+PHP_FUNCTION(mbedtls_csr_get_public_key);
 
-// crt.c
+// x509.c
 #define MBEDTLS_CRT_RESOURCE "mbedtls crt context"
 
 extern int le_crt;

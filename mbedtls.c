@@ -113,6 +113,14 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_csr_export_to_file, 0, 0, 2)
   ZEND_ARG_INFO(0, file)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_csr_get_subject, 0, 0, 1)
+  ZEND_ARG_INFO(0, csr)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_csr_get_public_key, 0, 0, 1)
+  ZEND_ARG_INFO(0, csr)
+ZEND_END_ARG_INFO()
+
 int le_pkey = 0;
 int le_csr = 0;
 int le_crt = 0;
@@ -165,6 +173,8 @@ static const zend_function_entry mbedtls_functions[] = {
   PHP_FE(mbedtls_csr_sign          , arginfo_mbedtls_csr_sign)
   PHP_FE(mbedtls_csr_export        , arginfo_mbedtls_csr_export)
   PHP_FE(mbedtls_csr_export_to_file, arginfo_mbedtls_csr_export_to_file)
+  PHP_FE(mbedtls_csr_get_subject   , arginfo_mbedtls_csr_get_subject)
+  PHP_FE(mbedtls_csr_get_public_key, arginfo_mbedtls_csr_get_public_key)
   PHP_FE_END
 };
 
