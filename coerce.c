@@ -33,11 +33,7 @@ int php_mbedtls_csr_load(struct php_mbedtls_csr **csr, zval *val, int *needs_fre
 {
   const char *pem;
   char *filename;
-  char *buffer;
-  long size;
-  FILE *f;
 
-  buffer = NULL;
   filename = NULL;
   *needs_free = 0;
 
@@ -46,40 +42,24 @@ int php_mbedtls_csr_load(struct php_mbedtls_csr **csr, zval *val, int *needs_fre
     *csr = (struct php_mbedtls_csr *)ecalloc(1, sizeof(struct php_mbedtls_csr));
     pem = Z_STRVAL_P(val);
 
+    mbedtls_x509write_csr_init(&(*csr)->csr_write);
+    mbedtls_x509_csr_init(&(*csr)->csr);
+
     if (strncasecmp("file://", pem, 7) == 0)
     {
       filename = emalloc(strlen(pem) - 6);
       strncpy(filename, pem + 7, strlen(pem) - 7);
 
-      f = fopen(filename, "rb");
+      mbedtls_x509_csr_parse_file(&(*csr)->csr, filename);
 
-      if (f == NULL)
-      {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "cannot open %s", filename);
-
-        return 0;
-      }
-
-      fseek(f, 0, SEEK_END);
-      size = ftell(f);
-      fseek(f, 0, SEEK_SET);
-
-      buffer = emalloc(size + 1);
-      fread(buffer, 1, size, f);
-      buffer[size] = '\0';
-
-      pem = buffer;
+      efree(filename);
+    }
+    else
+    {
+      mbedtls_x509_csr_parse(&(*csr)->csr, pem, strlen(pem));
     }
 
-    mbedtls_x509write_csr_init(&(*csr)->csr_write);
-    mbedtls_x509_csr_init(&(*csr)->csr);
-
-    mbedtls_x509_csr_parse(&(*csr)->csr, buffer, strlen(buffer));
-
     *needs_free = 1;
-
-    efree(buffer);
-    efree(filename);
   }
   else if (Z_TYPE_P(val) == IS_RESOURCE)
   {
@@ -105,11 +85,7 @@ int php_mbedtls_crt_load(mbedtls_x509_crt **crt, zval *val, int *needs_free)
 {
   const char *pem;
   char *filename;
-  char *buffer;
-  long size;
-  FILE *f;
 
-  buffer = NULL;
   filename = NULL;
   *needs_free = 0;
 
@@ -117,39 +93,24 @@ int php_mbedtls_crt_load(mbedtls_x509_crt **crt, zval *val, int *needs_free)
   {
     *crt = (mbedtls_x509_crt *)ecalloc(1, sizeof(struct mbedtls_x509_crt));
     pem = Z_STRVAL_P(val);
+  
+    mbedtls_x509_crt_init(*crt);
 
     if (strncasecmp("file://", pem, 7) == 0)
     {
       filename = emalloc(strlen(pem) - 6);
       strncpy(filename, pem + 7, strlen(pem) - 7);
 
-      f = fopen(filename, "rb");
+      mbedtls_x509_crt_parse_file(*crt, filename);
 
-      if (f == NULL)
-      {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "cannot open %s", filename);
-
-        return 0;
-      }
-
-      fseek(f, 0, SEEK_END);
-      size = ftell(f);
-      fseek(f, 0, SEEK_SET);
-
-      buffer = emalloc(size + 1);
-      fread(buffer, 1, size, f);
-      buffer[size] = '\0';
-
-      pem = buffer;
+      efree(filename);
+    }
+    else
+    {
+      mbedtls_x509_crt_parse(*crt, pem, strlen(pem));
     }
 
-    mbedtls_x509_crt_init(*crt);
-    mbedtls_x509_crt_parse(*crt, buffer, strlen(buffer));
-
     *needs_free = 1;
-
-    efree(buffer);
-    efree(filename);
   }
   else if (Z_TYPE_P(val) == IS_RESOURCE)
   {
@@ -174,44 +135,25 @@ int php_mbedtls_crt_load(mbedtls_x509_crt **crt, zval *val, int *needs_free)
 int php_mbedtls_pkey_load_internal(mbedtls_pk_context **pkey, const char *pem,
   const char *password)
 {
-  char *buffer;
   char *filename;
-  long size;
-  FILE *f;
 
   *pkey = (mbedtls_pk_context *)ecalloc(1, sizeof(struct mbedtls_x509_crt));
+  mbedtls_pk_init(*pkey);
 
   if (strncasecmp("file://", pem, 7) == 0)
   {
     filename = emalloc(strlen(pem) - 6);
     strncpy(filename, pem + 7, strlen(pem) - 7);
 
-    f = fopen(filename, "rb");
+    mbedtls_pk_parse_keyfile(*pkey, filename, password);
 
-    if (f == NULL)
-    {
-      php_error_docref(NULL TSRMLS_CC, E_WARNING, "cannot open %s", filename);
-
-      return 0;
-    }
-
-    fseek(f, 0, SEEK_END);
-    size = ftell(f);
-    fseek(f, 0, SEEK_SET);
-
-    buffer = emalloc(size + 1);
-    fread(buffer, 1, size, f);
-    buffer[size] = '\0';
-
-    pem = buffer;
+    efree(filename);
   }
-
-  mbedtls_pk_init(*pkey);
-  mbedtls_pk_parse_key(*pkey, buffer, strlen(buffer), password,
+  else
+  {
+    mbedtls_pk_parse_key(*pkey, pem, strlen(pem), password,
     password == NULL ? 0 : strlen(password));
-
-  efree(buffer);
-  efree(filename);
+  }
 
   return 1;
 }
