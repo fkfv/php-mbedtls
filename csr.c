@@ -209,24 +209,20 @@ PHP_FUNCTION(mbedtls_csr_sign)
 
   ctx_csr = (mbedtls_x509_csr *)zend_fetch_resource(Z_RES_P(csr),
     MBEDTLS_CSR_RESOURCE, le_csr);
-  
+  ctx_capriv = (mbedtls_pk_context *)zend_fetch_resource(Z_RES_P(cakey),
+	  MBEDTLS_PKEY_RESOURCE, le_pkey);
+
+  if (ctx_capriv == NULL)
+  {
+	  php_error_docref(NULL TSRMLS_CC, E_WARNING, "ca private key not provided");
+
+	  return;
+  }
+
   if (ca != NULL)
   {
     ctx_ca = (mbedtls_x509_crt *)zend_fetch_resource(Z_RES_P(ca),
       MBEDTLS_CRT_RESOURCE, le_crt);
-
-    if (ctx_ca != NULL)
-    {
-      ctx_capriv = (mbedtls_pk_context *)zend_fetch_resource(Z_RES_P(cakey),
-        MBEDTLS_PKEY_RESOURCE, le_pkey);
-
-      if (ctx_capriv == NULL)
-      {
-        php_error_docref(NULL TSRMLS_CC, E_WARNING, "ca private key not provided");
-
-        return;
-      }
-    }
   }
 
   ctx_crt = ecalloc(sizeof(mbedtls_x509_crt), 1);
@@ -244,8 +240,11 @@ PHP_FUNCTION(mbedtls_csr_sign)
   mbedtls_x509_dn_gets(subject, 4096, &ctx_csr->subject);
   mbedtls_x509write_crt_set_subject_name(&crt, subject);
 
-  mbedtls_x509_dn_gets(subject, 4096, &ctx_ca->subject);
-  mbedtls_x509write_crt_set_issuer_name(&crt, subject);
+  if (ca != NULL)
+  {
+    mbedtls_x509_dn_gets(subject, 4096, &ctx_ca->subject);
+    mbedtls_x509write_crt_set_issuer_name(&crt, subject);
+  }
 
   mbedtls_x509write_crt_set_subject_key(&crt, &ctx_csr->pk);
   mbedtls_x509write_crt_set_issuer_key(&crt, ctx_capriv);
