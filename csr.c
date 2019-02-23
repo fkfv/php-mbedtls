@@ -94,6 +94,9 @@ PHP_FUNCTION(mbedtls_csr_new)
   mbedtls_entropy_context ctx_entropy;
   const mbedtls_md_info_t* digest;
 
+  configargs = NULL;
+  digest = mbedtls_md_info_from_type(*mbedtls_md_list());
+
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "aza!", &dn, &key,
     &configargs) == FAILURE)
   {
@@ -196,7 +199,9 @@ PHP_FUNCTION(mbedtls_csr_sign)
   mbedtls_entropy_context ctx_entropy;
   const mbedtls_md_info_t* digest;
 
+  configargs = NULL;
   serial = 0;
+  digest = mbedtls_md_info_from_type(*mbedtls_md_list());
 
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz!z!lal", &csr, &ca,
     &cakey, &days, &configargs, &serial) == FAILURE)

@@ -70,6 +70,8 @@ PHP_FUNCTION(mbedtls_pkey_new)
   const mbedtls_ecp_curve_info *curve_info;
   struct php_pkey_options options;
 
+  configargs = NULL;
+
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|a!", &configargs)
     == FAILURE)
   {
