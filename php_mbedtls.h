@@ -95,4 +95,9 @@ PHP_FUNCTION(mbedtls_x509_export);
 PHP_FUNCTION(mbedtls_x509_export_to_file);
 PHP_FUNCTION(mbedtls_x509_fingerprint);
 
+// signature.c
+PHP_FUNCTION(mbedtls_sign);
+PHP_FUNCTION(mbedtls_verify);
+PHP_FUNCTION(mbedtls_hash);
+
 #endif	/* PHP_MBEDTLS_H */

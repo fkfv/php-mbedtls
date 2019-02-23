@@ -141,6 +141,26 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_x509_fingerprint, 0, 0, 1)
   ZEND_ARG_INFO(0, raw_output)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_sign, 0, 0, 3)
+  ZEND_ARG_INFO(0, data)
+  ZEND_ARG_INFO(1, signature)
+  ZEND_ARG_INFO(0, priv_key)
+  ZEND_ARG_INFO(0, algorithm)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_verify, 0, 0, 3)
+  ZEND_ARG_INFO(0, data)
+  ZEND_ARG_INFO(0, signature)
+  ZEND_ARG_INFO(0, pub_key)
+  ZEND_ARG_INFO(0, algorithm)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_hash, 0, 0, 2)
+  ZEND_ARG_INFO(0, data)
+  ZEND_ARG_INFO(0, method)
+  ZEND_ARG_INFO(0, raw_output)
+ZEND_END_ARG_INFO()
+
 int le_pkey = 0;
 int le_csr = 0;
 int le_crt = 0;
@@ -201,6 +221,14 @@ static const zend_function_entry mbedtls_functions[] = {
   PHP_FE(mbedtls_x509_export        , arginfo_mbedtls_x509_export)
   PHP_FE(mbedtls_x509_export_to_file, arginfo_mbedtls_x509_export_to_file)
   PHP_FE(mbedtls_x509_fingerprint   , arginfo_mbedtls_x509_fingerprint)
+
+  // signature.c
+  PHP_FE(mbedtls_sign  , arginfo_mbedtls_sign)
+  PHP_FE(mbedtls_verify, arginfo_mbedtls_verify)
+  PHP_FE(mbedtls_hash  , arginfo_mbedtls_hash)
+
+  PHP_FALIAS(mbedtls_digest, mbedtls_hash, arginfo_mbedtls_hash)
+
   PHP_FE_END
 };
 
