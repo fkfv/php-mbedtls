@@ -76,6 +76,7 @@ void php_mbedtls_csr_free(zend_resource *);
 int php_mbedtls_csr_load(mbedtls_x509_csr **csr, zval *val, int *needs_free);
 
 PHP_FUNCTION(mbedtls_csr_new);
+PHP_FUNCTION(mbedtls_csr_free);
 PHP_FUNCTION(mbedtls_csr_sign);
 PHP_FUNCTION(mbedtls_csr_export);
 PHP_FUNCTION(mbedtls_csr_export_to_file);

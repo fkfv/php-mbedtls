@@ -159,6 +159,23 @@ PHP_FUNCTION(mbedtls_csr_new)
   RETURN_RES(zend_register_resource(csr, le_csr));
 }
 
+PHP_FUNCTION(mbedtls_csr_free)
+{
+  zval *key;
+
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &key) == FAILURE)
+  {
+    return;
+  }
+
+  if (zend_fetch_resource(Z_RES_P(key), MBEDTLS_CSR_RESOURCE, le_csr) == NULL)
+  {
+    return;
+  }
+
+  zend_list_close(Z_RES_P(key));
+}
+
 static void php_mbedtls_format_validity(char *begin, char *end, zend_long days)
 {
   time_t now;

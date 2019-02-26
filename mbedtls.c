@@ -94,6 +94,10 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_csr_new, 0, 0, 2)
   ZEND_ARG_INFO(0, configargs)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_csr_free, 0, 0, 1)
+  ZEND_ARG_INFO(0, csr)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_csr_sign, 0, 0, 4)
   ZEND_ARG_INFO(0, csr)
   ZEND_ARG_INFO(0, ca)
@@ -210,6 +214,7 @@ static const zend_function_entry mbedtls_functions[] = {
 
   // csr.c
   PHP_FE(mbedtls_csr_new           , arginfo_mbedtls_csr_new)
+  PHP_FE(mbedtls_csr_free          , arginfo_mbedtls_csr_free)
   PHP_FE(mbedtls_csr_sign          , arginfo_mbedtls_csr_sign)
   PHP_FE(mbedtls_csr_export        , arginfo_mbedtls_csr_export)
   PHP_FE(mbedtls_csr_export_to_file, arginfo_mbedtls_csr_export_to_file)
