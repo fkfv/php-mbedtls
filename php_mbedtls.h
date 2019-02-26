@@ -101,4 +101,15 @@ PHP_FUNCTION(mbedtls_sign);
 PHP_FUNCTION(mbedtls_verify);
 PHP_FUNCTION(mbedtls_hash);
 
+// crl.c
+#define MBEDTLS_CRL_RESOURCE "mbedtls crl context"
+
+extern int le_crl;
+void php_mbedtls_crl_free(zend_resource *);
+
+PHP_FUNCTION(mbedtls_crl_new);
+PHP_FUNCTION(mbedtls_crl_free);
+PHP_FUNCTION(mbedtls_crl_revoke);
+PHP_FUNCTION(mbedtls_crl_export);
+
 #endif	/* PHP_MBEDTLS_H */
