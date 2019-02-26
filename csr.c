@@ -149,7 +149,8 @@ PHP_FUNCTION(mbedtls_csr_new)
   mbedtls_x509write_csr_set_subject_name(&csr_write, ZSTR_VAL(subject));
   mbedtls_x509write_csr_set_key(&csr_write, ctx_key);
 
-  mbedtls_x509write_csr_pem(&csr_write, output, 4096, mbedtls_ctr_drbg_random, &ctx_drbg);
+  mbedtls_x509write_csr_pem(&csr_write, output, 4096, mbedtls_ctr_drbg_random,
+    &ctx_drbg);
   mbedtls_x509_csr_parse(csr, strp(output) + 1);
 
   mbedtls_ctr_drbg_free(&ctx_drbg);
@@ -158,7 +159,7 @@ PHP_FUNCTION(mbedtls_csr_new)
   RETURN_RES(zend_register_resource(csr, le_csr));
 }
 
-void php_mbedtls_format_validity(char *begin, char *end, zend_long days)
+static void php_mbedtls_format_validity(char *begin, char *end, zend_long days)
 {
   time_t now;
   struct tm valid_until = { 0 };
