@@ -3,6 +3,8 @@ ARG_WITH('mbedtls', 'mbedtls support', 'no');
 if (PHP_MBEDTLS != 'no') {
   if (CHECK_LIB('mbedtls.lib', 'mbedtls') && CHECK_HEADER_ADD_INCLUDE('mbedtls/version.h', 'CFLAGS_MBEDTLS')) {
     AC_DEFINE('HAVE_MBEDTLS', 1, 'mbedtls support enabled');
+    CHECK_LIB('mbedcrypto.lib', 'mbedtls');
+    CHECK_LIB('mbedx509.lib', 'mbedtls');
 
     EXTENSION('mbedtls', 'mbedtls.c cipher.c pkey.c csr.c x509.c coerce.c signature.c crl.c', null, '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
   } else {
