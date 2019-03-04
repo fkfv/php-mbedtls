@@ -270,6 +270,15 @@ function mbedtls_x509_fingerprint($x509, string $hash_algorithm = "SHA1",
   bool $raw_output = false): string {}
 
 /**
+ * Parse an X.509 certificate and return a resource identifier for it
+ *
+ * @param mixed $x509certificate
+ *
+ * @return resource Returns a resource identifier on success or FALSE on failure.
+ */
+function mbedtls_x509_read($x509certificate): resource {}
+
+/**
  * Generate signature
  *
  * @param string $data          The string of data you wish to sign
