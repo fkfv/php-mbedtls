@@ -145,6 +145,10 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_x509_fingerprint, 0, 0, 1)
   ZEND_ARG_INFO(0, raw_output)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_x509_read, 0, 0, 1)
+  ZEND_ARG_INFO(0, crt)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_mbedtls_sign, 0, 0, 3)
   ZEND_ARG_INFO(0, data)
   ZEND_ARG_INFO(1, signature)
@@ -251,6 +255,7 @@ static const zend_function_entry mbedtls_functions[] = {
   PHP_FE(mbedtls_x509_export        , arginfo_mbedtls_x509_export)
   PHP_FE(mbedtls_x509_export_to_file, arginfo_mbedtls_x509_export_to_file)
   PHP_FE(mbedtls_x509_fingerprint   , arginfo_mbedtls_x509_fingerprint)
+  PHP_FE(mbedtls_x509_read          , arginfo_mbedtls_x509_read)
 
   // signature.c
   PHP_FE(mbedtls_sign  , arginfo_mbedtls_sign)

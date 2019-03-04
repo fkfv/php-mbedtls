@@ -95,6 +95,7 @@ PHP_FUNCTION(mbedtls_x509_free);
 PHP_FUNCTION(mbedtls_x509_export);
 PHP_FUNCTION(mbedtls_x509_export_to_file);
 PHP_FUNCTION(mbedtls_x509_fingerprint);
+PHP_FUNCTION(mbedtls_x509_read);
 
 // signature.c
 PHP_FUNCTION(mbedtls_sign);

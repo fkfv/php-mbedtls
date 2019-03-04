@@ -204,3 +204,24 @@ PHP_FUNCTION(mbedtls_x509_fingerprint)
   efree(fingerprint);
   efree(raw_fingerprint);
 }
+
+PHP_FUNCTION(mbedtls_x509_read)
+{
+  zval *crt;
+  int free;
+  mbedtls_x509_crt *ctx_crt;
+
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &crt) == FAILURE)
+  {
+    return;
+  }
+
+  if (php_mbedtls_crt_load(&ctx_crt, crt, &free) == 0)
+  {
+    php_error_docref(NULL TSRMLS_CC, E_WARNING, "invalid crt");
+
+    return;
+  }
+
+  RETURN_RES(zend_register_resource(ctx_crt, le_crt));
+}
