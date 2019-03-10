@@ -96,7 +96,7 @@ PHP_FUNCTION(mbedtls_crl_new)
 
   next_update = 365;
 
-  digest = mbedtls_md_info_from_type(*mbedtls_md_list());
+  digest = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
   configargs = NULL;
 
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz|z", &crt, &key,

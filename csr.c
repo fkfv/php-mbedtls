@@ -95,7 +95,7 @@ PHP_FUNCTION(mbedtls_csr_new)
   const mbedtls_md_info_t* digest;
 
   configargs = NULL;
-  digest = mbedtls_md_info_from_type(*mbedtls_md_list());
+  digest = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
 
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "az|a!", &dn, &key,
     &configargs) == FAILURE)
@@ -219,7 +219,7 @@ PHP_FUNCTION(mbedtls_csr_sign)
 
   configargs = NULL;
   serial = 0;
-  digest = mbedtls_md_info_from_type(*mbedtls_md_list());
+  digest = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
 
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zz!z!lal", &csr, &ca,
     &cakey, &days, &configargs, &serial) == FAILURE)
