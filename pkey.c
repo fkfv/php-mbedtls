@@ -473,7 +473,6 @@ PHP_FUNCTION(mbedtls_pkey_get_details)
   mbedtls_pk_write_pubkey_pem(ctx_key, output_buf, 16000);
   ZVAL_STRINGL(&vl, output_buf, strlen(output_buf));
   zend_hash_str_add(Z_ARRVAL_P(return_value), strp("key"), &vl);
-  zval_ptr_dtor(&vl);
 
   ZVAL_LONG(&vl, type);
   zend_hash_str_add(Z_ARRVAL_P(return_value), strp("type"), &vl);
