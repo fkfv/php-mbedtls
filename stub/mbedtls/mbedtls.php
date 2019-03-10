@@ -153,7 +153,7 @@ function mbedtls_pkey_get_private(string $key,
  * @return resource Returns the CSR or FALSE on failure.
  */
 function mbedtls_csr_new(array $dn, resource &$privkey,
-  array $configargs): resource {}
+  array $configargs = []): resource {}
 
 /**
  * Free CSR
@@ -183,7 +183,7 @@ function mbedtls_csr_free(resource $csr) {}
  *   FALSE on failure.
  */
 function mbedtls_csr_sign($csr, $cacert, $priv_key, int $days,
-  array $configargs, int $serial = 0): resource {}
+  array $configargs = [], int $serial = 0): resource {}
 
 /**
  * Exports a CSR as a string
@@ -345,7 +345,7 @@ function mbedtls_digest(string $data, string $method,
  *
  * @return resource
  */
-function mbedtls_crl_new($cert, $key, array $configargs): resource {}
+function mbedtls_crl_new($cert, $key, array $configargs = []): resource {}
 
 /**
  * Free CRL

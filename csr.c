@@ -97,7 +97,7 @@ PHP_FUNCTION(mbedtls_csr_new)
   configargs = NULL;
   digest = mbedtls_md_info_from_type(*mbedtls_md_list());
 
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "aza!", &dn, &key,
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "az|a!", &dn, &key,
     &configargs) == FAILURE)
   {
     return;
