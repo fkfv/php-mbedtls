@@ -150,8 +150,8 @@ int php_mbedtls_pkey_load_internal(mbedtls_pk_context **pkey, const char *pem,
   }
   else
   {
-    mbedtls_pk_parse_key(*pkey, pem, strlen(pem), password,
-    password == NULL ? 0 : strlen(password));
+    mbedtls_pk_parse_key(*pkey, pem, strlen(pem) + 1, password,
+      password == NULL ? 0 : strlen(password));
   }
 
   return 1;
