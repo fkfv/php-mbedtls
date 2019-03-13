@@ -106,7 +106,7 @@ int php_mbedtls_crt_load(mbedtls_x509_crt **crt, zval *val, int *needs_free)
     }
     else
     {
-      mbedtls_x509_crt_parse(*crt, pem, strlen(pem));
+      mbedtls_x509_crt_parse(*crt, pem, strlen(pem) + 1);
     }
 
     *needs_free = 1;
