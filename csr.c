@@ -298,9 +298,23 @@ PHP_FUNCTION(mbedtls_csr_sign)
   mbedtls_x509write_crt_set_version(&crt, MBEDTLS_X509_CRT_VERSION_3);
   mbedtls_x509write_crt_set_md_alg(&crt, digest->type);
   mbedtls_x509write_crt_set_validity(&crt, begin_validity, end_validity);
-  mbedtls_x509write_crt_set_basic_constraints(&crt, ctx_ca == NULL, -1);
-  mbedtls_x509write_crt_set_subject_key_identifier(&crt);
-  mbedtls_x509write_crt_set_authority_key_identifier(&crt);
+
+  if (ca != NULL)
+  {
+    mbedtls_x509write_crt_set_basic_constraints(&crt, 0, 0);
+    mbedtls_x509write_crt_set_subject_key_identifier(&crt);
+    mbedtls_x509write_crt_set_authority_key_identifier(&crt);
+    mbedtls_x509write_crt_set_key_usage(&crt,
+      MBEDTLS_X509_KU_DIGITAL_SIGNATURE);
+  }
+  else
+  {
+    mbedtls_x509write_crt_set_basic_constraints(&crt, 1, -1);
+    mbedtls_x509write_crt_set_subject_key_identifier(&crt);
+    mbedtls_x509write_crt_set_authority_key_identifier(&crt);
+    mbedtls_x509write_crt_set_key_usage(&crt,
+      MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN);
+  }
 
   mbedtls_x509write_crt_pem(&crt, output, 4096, mbedtls_ctr_drbg_random,
     &ctx_drbg);
